@@ -1,7 +1,6 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 
-require('dotenv').config();
-const TOKEN = process.env.TOKEN;
+const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = '1372617878318219377';
 
 const guildIdOrigen = '1128463380554993774';
