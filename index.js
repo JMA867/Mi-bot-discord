@@ -114,3 +114,10 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor web escuchando en el puerto ${PORT}`);
 });
+
+if (!interaction.member.permissions.has('Administrator')) {
+  return interaction.reply({
+    content: '❌ Solo los administradores pueden usar este comando.',
+    ephemeral: true
+  });
+}
