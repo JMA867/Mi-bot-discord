@@ -1,6 +1,6 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 
-const TOKEN = 'TU_TOKEN_AQUÍ';
+const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = '1372617878318219377';
 
 const guildIdOrigen = '1128463380554993774';
@@ -115,3 +115,4 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor web escuchando en el puerto ${PORT}`);
+});
