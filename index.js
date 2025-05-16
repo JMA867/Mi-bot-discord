@@ -10,6 +10,8 @@ const canalIdSedes = '1128463381704212506';    // Canal origen para /sedes (reem
 
 const guildIdPrueba = '737402963617775748';
 
+const roleIDPermitido = '1046818716572188782'; // 👈 Reemplaza este ID
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -114,10 +116,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor web escuchando en el puerto ${PORT}`);
 });
-
-if (!interaction.member.permissions.has('Administrator')) {
-  return interaction.reply({
-    content: '❌ Solo los administradores pueden usar este comando.',
-    ephemeral: true
-  });
-}
