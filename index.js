@@ -1,16 +1,13 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 
-const TOKEN = process.env.DISCORD_TOKEN;
+const TOKEN = 'TU_TOKEN_AQUÍ';
 const CLIENT_ID = '1372617878318219377';
 
-// IDs de servidores y canales
 const guildIdOrigen = '1128463380554993774';
-const canalIdBarrios = '1128463381704212507'; // Canal origen para /barrios
-const canalIdSedes = '1128463381704212506';    // Canal origen para /sedes (reemplázalo por el correcto)
+const canalIdBarrios = '1128463381704212507';
+const canalIdSedes = '1128463381704212506';
 
 const guildIdPrueba = '737402963617775748';
-
-const roleIDPermitido = '1046818716572188782'; // 👈 Reemplaza este ID
 
 const client = new Client({
   intents: [
@@ -20,7 +17,6 @@ const client = new Client({
   ]
 });
 
-// Registrar los comandos /barrios y /sedes
 const commands = [
   new SlashCommandBuilder().setName('barrios').setDescription('Copia mensajes e imágenes del canal de barrios'),
   new SlashCommandBuilder().setName('sedes').setDescription('Copia mensajes e imágenes del canal de sedes')
@@ -48,6 +44,16 @@ client.once('ready', () => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
+  const rolPermitido = '🚩 | Staff Organizaciones'; 
+
+
+  if (!interaction.member.roles.cache.some(role => role.name === rolPermitido)) {
+    return interaction.reply({
+      content: '❌ No tienes permisos para usar este comando.',
+      ephemeral: true
+    });
+  }
+
   let canalFuenteId = null;
   if (interaction.commandName === 'barrios') {
     canalFuenteId = canalIdBarrios;
@@ -58,22 +64,21 @@ client.on('interactionCreate', async (interaction) => {
   }
 
   try {
-    // Defiere la respuesta para tener más tiempo
-    await interaction.deferReply();
-
     const guildOrigen = client.guilds.cache.get(guildIdOrigen);
     if (!guildOrigen) {
-      return interaction.editReply('❌ No puedo encontrar el servidor origen.');
+      console.error('No pude encontrar el servidor origen.');
+      return interaction.reply('❌ No puedo encontrar el servidor origen.');
     }
 
     const canalOrigen = guildOrigen.channels.cache.get(canalFuenteId);
     if (!canalOrigen) {
-      return interaction.editReply('❌ No puedo acceder al canal origen.');
+      console.error('No puedo acceder al canal origen.');
+      return interaction.reply('❌ No puedo acceder al canal origen.');
     }
 
     const messages = await canalOrigen.messages.fetch({ limit: 50 });
     if (!messages || messages.size === 0) {
-      return interaction.editReply('No hay mensajes para copiar.');
+      return interaction.reply('No hay mensajes para copiar.');
     }
 
     const canalDestino = interaction.channel;
@@ -91,15 +96,10 @@ client.on('interactionCreate', async (interaction) => {
       await canalDestino.send({ content: texto, files: archivos });
     }
 
-    await interaction.editReply('✅ Mensajes copiados con éxito.');
+    await interaction.reply('✅ Mensajes copiados con éxito.');
   } catch (error) {
     console.error('Error copiando mensajes:', error);
-    // Si ya deferiste la respuesta, usa editReply, si no, reply
-    if (interaction.deferred || interaction.replied) {
-      await interaction.editReply('❌ Hubo un error copiando los mensajes.');
-    } else {
-      await interaction.reply('❌ Hubo un error copiando los mensajes.');
-    }
+    await interaction.reply('❌ Hubo un error copiando los mensajes.');
   }
 });
 
@@ -115,4 +115,3 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor web escuchando en el puerto ${PORT}`);
-});
