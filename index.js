@@ -47,8 +47,16 @@ client.once('ready', () => {
   registerCommands();
 });
 
+// Cooldowns
+const cooldowns = new Map();
+
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
+
+  const comando = interaction.commandName;
+  const usuario = interaction.user.id;
+  const claveCooldown = `${comando}-${usuario}`;
+  const cooldownTime = 30 * 1000; // 30 segundos
 
   const rolPermitido = '🚩 | Staff Organizaciones';
   if (!interaction.member.roles.cache.some(role => role.name === rolPermitido)) {
@@ -58,38 +66,57 @@ client.on('interactionCreate', async (interaction) => {
     });
   }
 
-  let canalFuenteId = interaction.commandName === 'barrios' ? canalIdBarrios : canalIdSedes;
+  // Cooldown check
+  const ahora = Date.now();
+  if (cooldowns.has(claveCooldown)) {
+    const ultimoUso = cooldowns.get(claveCooldown);
+    const diferencia = ahora - ultimoUso;
+
+    if (diferencia < cooldownTime) {
+      const segundosRestantes = Math.ceil((cooldownTime - diferencia) / 1000);
+      return interaction.reply({
+        content: `⏳ Debes esperar ${segundosRestantes} segundos antes de volver a usar \`/${comando}\`.`,
+        ephemeral: true
+      });
+    }
+  }
+
+  cooldowns.set(claveCooldown, ahora);
+
+  await interaction.deferReply();
+
+  let canalFuenteId = comando === 'barrios' ? canalIdBarrios : canalIdSedes;
 
   try {
     const guildOrigen = client.guilds.cache.get(guildIdOrigen);
     if (!guildOrigen) {
       console.error('❌ No se encontró el servidor origen.');
-      return interaction.reply('❌ No se pudo encontrar el servidor origen.');
+      return interaction.editReply('❌ No se pudo encontrar el servidor origen.');
     }
 
     const canalOrigen = guildOrigen.channels.cache.get(canalFuenteId);
     if (!canalOrigen) {
       console.error('❌ No se pudo acceder al canal de origen.');
-      return interaction.reply('❌ No se pudo acceder al canal de origen.');
+      return interaction.editReply('❌ No se pudo acceder al canal de origen.');
     }
 
     const messages = await canalOrigen.messages.fetch({ limit: 50 });
     if (!messages.size) {
-      return interaction.reply('⚠️ No hay mensajes para copiar.');
+      return interaction.editReply('⚠️ No hay mensajes para copiar.');
     }
 
     const canalDestino = interaction.channel;
 
     for (const message of messages.values()) {
       const texto = message.content || '';
-      const archivos = message.attachments.map(att => new AttachmentBuilder(att.url));
+      const archivos = [...message.attachments.values()].map(att => new AttachmentBuilder(att.url));
       await canalDestino.send({ content: texto, files: archivos });
     }
 
-    await interaction.reply('✅ Mensajes copiados con éxito.');
+    await interaction.editReply('✅ Mensajes copiados con éxito.');
   } catch (error) {
     console.error('❌ Error copiando mensajes:', error);
-    await interaction.reply('❌ Hubo un error al copiar los mensajes.');
+    await interaction.editReply('❌ Hubo un error al copiar los mensajes.');
   }
 });
 
